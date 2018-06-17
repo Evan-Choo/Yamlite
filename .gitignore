@@ -1,0 +1,9 @@
+#productions
+/out
+
+#configrations
+yamlite.iml
+
+.DS_Store
+.gitattributes
+.idea
