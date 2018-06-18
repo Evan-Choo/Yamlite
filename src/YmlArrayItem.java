@@ -1,3 +1,4 @@
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 /**
@@ -21,38 +22,94 @@ public class YmlArrayItem extends YmlItem
 
 
     @Override
-    public void print()
+    public void print(int indentation, FileOutputStream fop) throws Exception
     {
-        if (this.isInAnArray() == true)
+        /**
+         *  isInArray==true&&has name -> {name: [...]}
+         *
+         *  isInArray==true&&has no name -> [...]
+         *
+         *  isInArray==false -> name:[...]
+         */
+        if (this.isInAnArray()==true&&this.getName() != null)
         {
-            System.out.println("{");
+            for(int i=0; i<indentation; i++)
+                fop.write(" ".getBytes());
+            fop.write("{".getBytes());
+            fop.write(System.lineSeparator().getBytes());
+            for(int i=0; i<indentation+2; i++)
+                fop.write(" ".getBytes());
+            String s = "\"" + this.getName() + "\": [";
+            //System.out.println("\"" + this.getName() + "\": [");
+            fop.write(s.getBytes());
+            fop.write(System.lineSeparator().getBytes());
         }
+        else if(this.isInAnArray()==true&&this.getName()==null)
+        {
+            for(int i=0; i<indentation; i++)
+                //System.out.print(" ");
+                fop.write(" ".getBytes());
+            //System.out.println("[");
+            fop.write("[".getBytes());
+            fop.write(System.lineSeparator().getBytes());
+        }
+        else if(this.isInAnArray()==false&&this.getName()!=null)
+        {
+            for(int i=0; i<indentation; i++)
+                //System.out.print(" ");
+                fop.write(" ".getBytes());
+            String s = "\"" + this.getName() + "\": [";
+            //System.out.println("\"" + this.getName() + "\": [");
+            fop.write(s.getBytes());
+            fop.write(System.lineSeparator().getBytes());
+        }
+        else if(this.isInAnArray()==false&&this.getName()==null)
+        {
+            //System.out.println("[");
+            fop.write("[".getBytes());
+            fop.write(System.lineSeparator().getBytes());
 
-        if (this.getName() != null)
-        {
-            System.out.println("{");
-            System.out.println("\"" + this.getName() + "\": [");
-        }
-        else
-        {
-            System.out.println("[");
+            for(int i=0; i<value.size(); i++)
+            {
+                value.get(i).print(indentation+2, fop);
+                if (i != value.size() - 1)
+                {
+                    //System.out.print(",");
+                    fop.write(",".getBytes());
+                }
+                //System.out.println();
+                fop.write(System.lineSeparator().getBytes());
+            }
+
+            //System.out.println("]");
+            fop.write("]".getBytes());
+            fop.write(System.lineSeparator().getBytes());
+
+            return;
         }
 
         for(int i=0; i<value.size(); i++)
         {
-            value.get(i).print();
+            value.get(i).print(indentation+2, fop);
             if (i != value.size() - 1)
             {
-                System.out.print(",");
+                //System.out.print(",");
+                fop.write(",".getBytes());
             }
-            System.out.println();
+            //System.out.println();
+            fop.write(System.lineSeparator().getBytes());
         }
 
-        System.out.println("]");
+        for(int i=0; i<indentation; i++)
+            //System.out.print(" ");
+            fop.write(" ".getBytes());
+        //System.out.print("]");
+        fop.write("]".getBytes());
 
-        if (this.isInAnArray() == true)
+        if (this.isInAnArray() == true && this.getName()!=null)
         {
-            System.out.println("}");
+            //System.out.print("}");
+            fop.write("}".getBytes());
         }
     }
 
@@ -70,5 +127,11 @@ public class YmlArrayItem extends YmlItem
     public void addItem(YmlItem item)
     {
         value.add(item);
+    }
+
+    @Override
+    public ArrayList<YmlItem> getRealValue()
+    {
+        return value;
     }
 }

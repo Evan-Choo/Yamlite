@@ -1,3 +1,6 @@
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+
 /**
  * Created by EvanChoo on 5/25/18.
  */
@@ -13,7 +16,7 @@ public abstract class YmlItem
         this.isInAnArray = isInAnArray;
     }
 
-    public abstract void print();
+    public abstract void print(int indentation, FileOutputStream fop) throws Exception;
 
     public abstract String getValue();
 
@@ -40,5 +43,10 @@ public abstract class YmlItem
     public void setInAnArray(boolean inAnArray)
     {
         isInAnArray = inAnArray;
+    }
+
+    public ArrayList<YmlItem> getRealValue()
+    {
+        return null;
     }
 }

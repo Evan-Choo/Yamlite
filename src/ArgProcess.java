@@ -20,26 +20,43 @@ public class ArgProcess
         switch (args.length)
         {
             case 0:
-                YmlProcess.isValid("/Users/EvanChoo/Desktop/sample.yml");
+                String result = YmlProcess.isValid("/Users/EvanChoo/Desktop/sample.yml");
+                if (result.equals("Valid"))
+                {
+                    System.out.println("Valid");
+                }
                 break;
 
             case 1:
-                YmlProcess.isValid(args[0]);
+                String result1 = YmlProcess.isValid(args[0]);
+                if (result1.equals("Valid"))
+                {
+                    System.out.println("Valid");
+                }
                 break;
 
             case 2:
                 if(args[0].equals("-parse"))
                 {
-                    YmlProcess.isValid(args[1]);
+                    String result21 = YmlProcess.isValid(args[1]);
+                    if (result21.equals("Valid"))
+                    {
+                        System.out.println("Valid");
+                    }
 
                 } else if(args[0].equals("-json"))
                 {
-
+                    if(YmlProcess.isValid(args[1]).equals("Valid"))
+                        JsonFile.getInstance().generateJsonFile();
                 }
                 break;
 
             case 3:
-
+                if(YmlProcess.isValid(args[2]).equals("Valid"))
+                {
+                    //System.out.println(System.getProperty("user.dir"));
+                    JsonFile.getInstance().find(args[1]);
+                }
                 break;
         }
     }

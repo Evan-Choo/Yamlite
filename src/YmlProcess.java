@@ -1,3 +1,5 @@
+import jdk.nashorn.internal.runtime.regexp.joni.encoding.CharacterType;
+
 import javax.sound.sampled.Line;
 import java.io.BufferedReader;
 import java.io.LineNumberReader;
@@ -51,10 +53,9 @@ public class YmlProcess
 
             columnNum = 0;
         }
+        //JsonFile.getInstance().generateJsonFile();
 
-        JsonFile.getInstance().generateJsonFile();
-
-        return null;
+        return "Valid";
     }
 
     /**
@@ -122,7 +123,6 @@ public class YmlProcess
                         state = 1;
                         columnNum++;
                     }
-                    //todo: fine the situation where the outermost is an array
                     else if (chars[columnNum] == '-')
                     {
                         if (!firstNoncommentLine)
@@ -593,10 +593,24 @@ public class YmlProcess
         return "line " + lineNumberReader.getLineNumber() + ", position " + (columnNum + 1);
     }
 
-    //todo: inmplement this method
-    private static void processOutermostArray(LineNumberReader lineNumberReader, String line)
+    private static void processOutermostArray(LineNumberReader lineNumberReader, String line) throws Exception
     {
+        ArrayList<String> content = new ArrayList<>();
+        content.add(line);
 
+        line = lineNumberReader.readLine();
+        while (line != null)
+        {
+            //end of the array
+            if (line.length() != 0 && !isComment(line)) content.add(line);
+            line = lineNumberReader.readLine();
+        }
+
+        ArrayList<ArrayLine> arrayLines = produceArrayLines(content);
+
+        YmlArrayItem arrayItem = new YmlArrayItem(null, false);
+
+        produceArrayItem(arrayLines, arrayItem);
     }
 
     private static void processArrayOrKeyValuePair(LineNumberReader lineNumberReader, String line) throws Exception
@@ -615,18 +629,75 @@ public class YmlProcess
         content.add(line);
 
         line = lineNumberReader.readLine();
-        boolean isFinished = false;
-        while(line!=null && !isFinished)
+        //boolean isFinished = false;
+        while(line!=null)
         {
             //end of the array
             if(!isComment(line) && line.charAt(0)!=' ')
-                isFinished = true;
+            {
+                //isFinished = true;
+                break;
+            }
             else if(!isComment(line)&&line.length()!=0)
                 content.add(line);
 
             line = lineNumberReader.readLine();
         }
 
+        ArrayList<ArrayLine> arrayLines = produceArrayLines(content);
+
+        YmlArrayItem arrayItem = new YmlArrayItem(name, false);
+
+        produceArrayItem(arrayLines, arrayItem);
+    }
+
+    private static boolean isComment(String line) throws Exception
+    {
+        boolean isFinished = false;
+        char[] chars = line.toCharArray();
+        int state = 0;
+        columnNum = 0;
+
+        if(line.length()==0)
+            return true;
+
+        while(!isFinished)
+        {
+            switch (state)
+            {
+                case 0:
+                    if(chars[columnNum]=='#')
+                        return true;
+                    else if(chars[columnNum]==' ')
+                    {
+                        state = 1;
+                        columnNum++;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+
+                case 1:
+                    if(chars[columnNum]==' ')
+                    {
+                        state = 0;
+                        columnNum++;
+                    }
+                    else
+                    {
+                        throw new Exception(getCurPos()+", indentation error");
+                    }
+                    break;
+            }
+        }
+
+        return true;
+    }
+
+    private static ArrayList<ArrayLine> produceArrayLines(ArrayList<String> content) throws Exception
+    {
         ArrayList<ArrayLine> arrayLines = new ArrayList<>();
         for(String s: content)
         {
@@ -692,8 +763,11 @@ public class YmlProcess
                 throw new Exception(getCurPos()+", - or acsii needed");
         }
 
-        YmlArrayItem arrayItem = new YmlArrayItem(name, false);
-        //int indexOfArray = 0;
+        return arrayLines;
+    }
+
+    private static void produceArrayItem(ArrayList<ArrayLine> arrayLines, YmlArrayItem arrayItem) throws Exception
+    {
         Stack<YmlItem> stack = new Stack<>();
         stack.push(arrayItem);
         for(int i = 0; i < arrayLines.size(); i++)
@@ -716,7 +790,7 @@ public class YmlProcess
                         stack.peek().addItem(item1);
                     }
                 }
-                if(arrayLine.indentation > arrayLines.get(i+1).indentation && stack.size() != 1)
+                else if(arrayLine.indentation > arrayLines.get(i+1).indentation && stack.size() != 1)
                 {
                     YmlItem item1 = stack.pop();
                     stack.peek().addItem(item1);
@@ -729,13 +803,10 @@ public class YmlProcess
                 if(newArrayLine.indentation!=arrayLine.indentation+2)
                     throw new Exception(getCurPos()+", indentation error");
 
-                YmlArrayItem arrayItem2 = new YmlArrayItem(null, true);
-                stack.push(arrayItem2);
-
-                if(newArrayLine.type==1)
+                if(newArrayLine.type==0||newArrayLine.type==1)
                 {
-                    YmlArrayItem arrayItem1 = new YmlArrayItem(null, true);
-                    stack.push(arrayItem1);
+                    YmlArrayItem arrayItem2 = new YmlArrayItem(null, true);
+                    stack.push(arrayItem2);
                 }
             }
             else if(arrayLine.type==2)
@@ -782,52 +853,6 @@ public class YmlProcess
 
         JsonFile.getInstance().addItem(arrayItem);
     }
-
-    private static boolean isComment(String line) throws Exception
-    {
-        boolean isFinished = false;
-        char[] chars = line.toCharArray();
-        int state = 0;
-        columnNum = 0;
-
-        if(line.length()==0)
-            return true;
-
-        while(!isFinished)
-        {
-            switch (state)
-            {
-                case 0:
-                    if(chars[columnNum]=='#')
-                        return true;
-                    else if(chars[columnNum]==' ')
-                    {
-                        state = 1;
-                        columnNum++;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                    break;
-
-                case 1:
-                    if(chars[columnNum]==' ')
-                    {
-                        state = 0;
-                        columnNum++;
-                    }
-                    else
-                    {
-                        throw new Exception(getCurPos()+", indentation error");
-                    }
-                    break;
-            }
-        }
-
-        return true;
-    }
-
 }
 
 class Validator{

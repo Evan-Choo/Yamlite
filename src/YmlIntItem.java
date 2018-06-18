@@ -1,3 +1,5 @@
+import java.io.FileOutputStream;
+
 /**
  * Created by EvanChoo on 5/25/18.
  */
@@ -18,15 +20,20 @@ public class YmlIntItem extends YmlItem
     }
 
     @Override
-    public void print()
+    public void print(int indentation, FileOutputStream fop) throws Exception
     {
         if(this.getName()!=null)
         {
-            System.out.print("\"" + this.getName() + "\": " + getValue());
+            for(int i=0; i<indentation; i++)
+                fop.write(" ".getBytes());
+            String s = "\"" + this.getName() + "\": " + getValue();
+            fop.write(s.getBytes());
         }
         else
         {
-            System.out.print(getValue());
+            for(int i=0; i<indentation; i++)
+                fop.write(" ".getBytes());
+            fop.write(getValue().getBytes());
         }
 
     }
